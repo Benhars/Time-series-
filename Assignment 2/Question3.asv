@@ -1,0 +1,47 @@
+clear;
+path = "C:/Users/bowus/OneDrive - Emory/PhD Economics/Year 2/Time Series/Homework/Assignment 2/";
+data =  readtable(path + "ND000336Q.xls");
+data(1:2,:) = [];
+growthRates = diff(log(table2array(data(:,end))));
+Time = data.ND000336Q(2:end,:);
+
+Y_t = timetable(Time,growthRates);
+%% check the stationarity
+plot(Time,growthRates,"-")
+title("The Growth rates NonResidential Private Investment")
+xlabel("Quarter")
+ylabel("Growth Rates")
+saveas(gcf,'growthRates.png')
+
+%
+autocorr(growthRates,45);
+
+%% Quetsion b: Estimate AR(4)
+nlags = 4;
+X_t = lagmatrix(Y_t,1:nlags); %create the lags of Y
+X_t = table2array(X_t(nlags+1:end,:)); % Remove the lost observations
+Y_ar = table2array(Y_t(nlags+1:end,:)); 
+
+% Use 3 estimation methods
+%1. Linear model estimation: Use M-estimation algorithm
+mdl = fitlm(X_t,Y_ar,'RobustOpts','on');
+mdl.Coefficients
+
+%% 2 Use the OLS estimation:
+[b_OLS, ~, ~, ~, stats] = regress(Y_ar, [ones(height(Y_ar), 1), X_t]);
+
+%3 Use the ar function to estimate an AR(4) model
+ar_model = ar(growthRates, 4, 'ls');
+b_ar = ar_model.A ;
+
+% 4. Hac Method or the Newey west Coefficients
+%Calculate heteroskedastic-consistent standard errors
+[EstCoeffCov,se,coeff] = hac(mdl, bandwidth = 5);
+
+
+
+
+
+%% Calculate heteroskedastic-consistent standard errors
+
+
